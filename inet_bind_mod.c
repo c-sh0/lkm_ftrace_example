@@ -34,7 +34,6 @@
  * way to "hijack" the kernel inet_bind() function. First we'll call our own inet_bind()
  * function, grant the CAP_NET_BIND_SERVICE capability then, call the real inet_bind() function.
  * The ftrace framework is used in live kernel patching (kpatch)
- *
  * https://www.kernel.org/doc/html/v5.6/trace/ftrace-uses.html
  * https://www.kernel.org/doc/Documentation/trace/ftrace.txt
  * https://www.kernel.org/doc/Documentation/livepatch/livepatch.txt */
@@ -63,8 +62,7 @@ int patched_function(struct socket *sock, struct sockaddr *uaddr, int addr_len) 
 
 	printk("EXAMPLE: patched_function(): start\n");
 
-	/* task information */
-	//printk(KERN_INFO "process tty: %d\n", current->signal->tty);
+	/* task information, `current` is a macro, see: arch/x86/include/asm/current.h */
 	printk(KERN_INFO "EXAMPLE: task_name: %s task_pid: %d task_vpid: %d task_tgid: %d\n",
 		current->comm, (int)task_pid_nr(current), (int)task_pid_vnr(current), (int)task_tgid_nr(current));
 
@@ -72,16 +70,6 @@ int patched_function(struct socket *sock, struct sockaddr *uaddr, int addr_len) 
 	 * https://www.kernel.org/doc/Documentation/security/credentials.txt */
 	printk(KERN_INFO "EXAMPLE: user_uid:%d user_gid:%d user_euid:%d user_egid:%d \n",
 		creds->uid.val, creds->gid.val, creds->euid.val, creds->egid.val);
-
-#if 0
-	/* raw capabilities info */
-	printk(KERN_INFO "EXAMPLE: capabilities, inh[0]=%u inh[1]=%u per[0]=%u per[1]=%u eff[0]=%u eff[1]%u bset[0]=%u bset[1]=%u",
-		creds->cap_inheritable.cap[0], creds->cap_inheritable.cap[1],
-		creds->cap_permitted.cap[0], creds->cap_permitted.cap[1],
-		creds->cap_effective.cap[0], creds->cap_effective.cap[1],
-		creds->cap_bset.cap[0], creds->cap_bset.cap[1]);
-	printk(KERN_INFO "EXAMPLE: CAP_NET_BIND_SERVICE = CAP_TO_INDEX: %u CAP_TO_MASK: %u\n",CAP_TO_INDEX(CAP_NET_BIND_SERVICE),CAP_TO_MASK(CAP_NET_BIND_SERVICE));
-#endif
 
 	/* there are a number of ways to change capabilities, task, and user permissions,
 	 * here we'll just use the cap_raise() macro */
