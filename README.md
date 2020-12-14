@@ -1,4 +1,4 @@
-# kernel_ftrace_example
+# lkm_ftrace_example
 Example ftrace LKM (Loadable Kernel Module)
 
 ## Description
