@@ -135,9 +135,14 @@ static int __init inet_module_init(void) {
 	};
 
 	typedef int (*kallsyms_on_each_symbol_t)(int (*fn)(void *, const char *, struct module *, unsigned long), void *data);
-
 	kallsyms_on_each_symbol_t kallsyms_on_each_symbol;
-	register_kprobe(&kp);
+
+	rc = register_kprobe(&kp);
+	if(rc < 0) {
+		printk(KERN_INFO "EXAMPLE: register_kprobe failed (%d)\n", rc);
+		return rc;
+	}
+
 	kallsyms_on_each_symbol = (kallsyms_on_each_symbol_t) kp.addr;
 	unregister_kprobe(&kp);
 #endif
