@@ -4,12 +4,12 @@
  * to privileged ports < 1024
  *
  * Tested with
- *   -: CentOS kernel-ml-5.6.15
- *   -: gcc (GCC) 9.3.1
+ *   -: CentOS kernel-ml-5.6.15, kernel-ml-5.10.14
+ *   -: gcc (GCC) 9.3.1, 8.3.1
  *
  * Live patching has changed in newer kernels
  * kallsyms_lookup_name() and kallsyms_on_each_symbol()
- * are no longer exported
+ * are no longer exported, use kprobe for kernel's >= 5.7.0
  *
  * https://lwn.net/Articles/813350/
  * https://github.com/torvalds/linux/commit/0bd476e6c67190b5eb7b6e105c8db8ff61103281
@@ -29,6 +29,7 @@
 #include <linux/user_namespace.h>
 #include <linux//prctl.h>
 #include <linux/security.h>
+#include <linux/kprobes.h>
 
 /* define function name - just to make it easy to use with ftrace (Function Tracer) as a
  * way to "hijack" the kernel inet_bind() function. First we'll call our own inet_bind()
@@ -127,6 +128,19 @@ static int kallsyms_walk_callback(void *data, const char *name, struct module *m
 
 static int __init inet_module_init(void) {
 	int rc = 0;
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,7,0)
+	static struct kprobe kp = {
+		.symbol_name = "kallsyms_on_each_symbol"
+	};
+
+	typedef int (*kallsyms_on_each_symbol_t)(int (*fn)(void *, const char *, struct module *, unsigned long), void *data);
+
+	kallsyms_on_each_symbol_t kallsyms_on_each_symbol;
+	register_kprobe(&kp);
+	kallsyms_on_each_symbol = (kallsyms_on_each_symbol_t) kp.addr;
+	unregister_kprobe(&kp);
+#endif
 
 	/* walk /proc/kallsyms for FTRACE_FUNCTION */
 	rc = kallsyms_on_each_symbol(kallsyms_walk_callback, NULL);

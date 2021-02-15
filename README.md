@@ -15,9 +15,9 @@ In `net/ipv4/af_inet.c:inet_bind()` there is a capabilities check to see if the 
 
  - Use the ftrace framework to grab the `inet_bind()` and insert our own function.
  - Our function grants `CAP_NET_BIND_SERVICE` to the process before calling the real `inet_bind()`
- - Tested on CentOS kernel-ml-5.6.15 and GCC 9.3.1
+ - Tested on CentOS kernel-ml-5.6.15, kernel-ml-5.10.14 and gcc (GCC) 9.3.1, 8.3.1
 
-Note: Live patching has changed in newer kernels. The kallsyms_lookup_name() and kallsyms_on_each_symbol() functions are no longer exported
+Note: Kernel's >= 5.7.0 kallsyms_lookup_name() and kallsyms_on_each_symbol() functions are no longer exported, use kprobe instead
  * https://lwn.net/Articles/813350/
  * https://github.com/torvalds/linux/commit/0bd476e6c67190b5eb7b6e105c8db8ff61103281
  * https://github.com/torvalds/linux/tree/master/samples/livepatch
